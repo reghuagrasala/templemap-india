@@ -29,8 +29,7 @@ const browseCategories = [
 
 function saveFavourites() { localStorage.setItem('templemap-favourites', JSON.stringify(state.favourites)); }
 function applyTextSize() { document.body.classList.remove('large-text', 'xlarge-text'); if (state.textSize === 'large') document.body.classList.add('large-text'); if (state.textSize === 'xlarge') document.body.classList.add('xlarge-text'); }
-function setRoute(route) { state.route = route; render(); }
-function navigate(route) { if (state.route !== route) state.previousRoute = state.route; location.hash = route; }
+function navigate(route) { location.hash = route; }
 
 function searchTemples(query) {
   const q = query.trim().toLowerCase();
@@ -136,6 +135,13 @@ function bindEvents() {
   const locationButton = document.getElementById('locationButton');
   if (locationButton) locationButton.onclick = () => { if (!navigator.geolocation) return alert('Location is not supported by this browser.'); navigator.geolocation.getCurrentPosition(() => alert('Location permission is enabled for TempleMap India.'), () => alert('Location permission was not granted.')); };
 }
-function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-window.addEventListener('hashchange', () => { state.route = location.hash.replace('#', '') || 'home'; render(); });
+function escapeHtml(value) { return String(value).replace(/[&<>'\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c])); }
+window.addEventListener('hashchange', () => {
+  const nextRoute = location.hash.replace('#', '') || 'home';
+  const nextBase = nextRoute.split('/')[0];
+  const currentBase = state.route.split('/')[0];
+  if (nextBase === 'temple' && currentBase !== 'temple') state.previousRoute = state.route;
+  state.route = nextRoute;
+  render();
+});
 render();
