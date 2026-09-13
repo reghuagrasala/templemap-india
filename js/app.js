@@ -1,132 +1,34 @@
-const state = {
-  route: location.hash.replace('#','') || 'home', previousRoute: 'home', query: '',
-  favourites: JSON.parse(localStorage.getItem('templemap-favourites') || '[]'),
-  textSize: localStorage.getItem('templemap-text-size') || 'normal',
-  homeData: null, updates: null, templeUpdates: null
-};
-
-const temples = [
-  {id:'ochira',name:'Oachira Parabrahma Temple',ml:'ഓച്ചിറ പരബ്രഹ്മ ക്ഷേത്രം',place:'Oachira',district:'Kollam',state:'Kerala',focus:'Parabrahmam',type:'Pilgrimage centre',tradition:'Non-idol worship'},
-  {id:'kottakkal-vishwambhara',name:'Kottakkal Vishwambhara Temple',ml:'കോട്ടക്കൽ വിശ്വംഭര ക്ഷേത്രം',place:'Kottakkal',district:'Malappuram',state:'Kerala',focus:'Shiva',type:'Temple',tradition:'Hindu'},
-  {id:'somnath',name:'Somnath Temple',ml:'സോമനാഥ ക്ഷേത്രം',place:'Prabhas Patan',district:'Gir Somnath',state:'Gujarat',focus:'Shiva',type:'Temple',tradition:'Hindu'},
-  {id:'vaishno-devi',name:'Shri Mata Vaishno Devi Shrine',ml:'ശ്രീ മാതാ വൈഷ്ണോ ദേവി ക്ഷേത്രം',place:'Katra',district:'Reasi',state:'Jammu and Kashmir',focus:'Vaishno Devi',type:'Shrine',tradition:'Hindu'},
-  {id:'tirumala',name:'Tirumala Venkateswara Temple',ml:'തിരുമല വെങ്കടേശ്വര ക്ഷേത്രം',place:'Tirumala',district:'Tirupati',state:'Andhra Pradesh',focus:'Venkateswara',type:'Temple',tradition:'Vaishnavism'}
-];
-
-const browseData = {
-  'State / Union Territory':['Kerala','Gujarat','Andhra Pradesh','Jammu and Kashmir'],
-  'Religion':['Hindu','Buddhist','Jain','Sikh','Other'],
-  'Sect / Tradition':['Vaishnavism','Shaivism','Non-idol worship'],
-  'Deity / Sacred Focus':['Shiva','Venkateswara','Vaishno Devi','Parabrahmam'],
-  'Site Category':['Temple','Shrine','Pilgrimage centre'],
-  'Heritage':['Heritage site','ASI protected','Other heritage'],
-  'Historical Figure':['Historical figure'],
-  'Architecture':['Dravidian','Nagara','Vesara','Regional'],
-  'Pilgrimage / Temple Circuits':['Char Dham','Jyotirlinga','Shakti Peetha','Regional circuit']
-};
-
-const normalize = value => String(value || '').normalize('NFC').toLocaleLowerCase().replace(/[\u200c\u200d\uFEFF]/g,'').replace(/[\s\-–—'’.]/g,'');
+const state={route:location.hash.replace('#','')||'home',previousRoute:'home',query:'',favourites:JSON.parse(localStorage.getItem('templemap-favourites')||'[]'),textSize:localStorage.getItem('templemap-text-size')||'normal',homeData:null,updates:null,templeUpdates:null};
+const temples=[
+{id:'ochira',name:'Oachira Parabrahma Temple',ml:'ഓച്ചിറ പരബ്രഹ്മ ക്ഷേത്രം',place:'Oachira',district:'Kollam',state:'Kerala',focus:'Parabrahmam',type:'Pilgrimage centre',tradition:'Non-idol worship'},
+{id:'kottakkal-vishwambhara',name:'Kottakkal Vishwambhara Temple',ml:'കോട്ടക്കൽ വിശ്വംഭര ക്ഷേത്രം',place:'Kottakkal',district:'Malappuram',state:'Kerala',focus:'Shiva',type:'Temple',tradition:'Hindu'},
+{id:'somnath',name:'Somnath Temple',ml:'സോമനാഥ ക്ഷേത്രം',place:'Prabhas Patan',district:'Gir Somnath',state:'Gujarat',focus:'Shiva',type:'Temple',tradition:'Hindu'},
+{id:'vaishno-devi',name:'Shri Mata Vaishno Devi Shrine',ml:'ശ്രീ മാതാ വൈഷ്ണോ ദേവി ക്ഷേത്രം',place:'Katra',district:'Reasi',state:'Jammu and Kashmir',focus:'Vaishno Devi',type:'Shrine',tradition:'Hindu'},
+{id:'tirumala',name:'Tirumala Venkateswara Temple',ml:'തിരുമല വെങ്കടേശ്വര ക്ഷേത്രം',place:'Tirumala',district:'Tirupati',state:'Andhra Pradesh',focus:'Venkateswara',type:'Temple',tradition:'Vaishnavism'}];
+const browseData={'State / Union Territory':['Kerala','Gujarat','Andhra Pradesh','Jammu and Kashmir'],'Religion':['Hindu','Buddhist','Jain','Sikh','Other'],'Sect / Tradition':['Vaishnavism','Shaivism','Non-idol worship'],'Deity / Sacred Focus':['Shiva','Venkateswara','Vaishno Devi','Parabrahmam'],'Site Category':['Temple','Shrine','Pilgrimage centre'],'Heritage':['Heritage site','ASI protected','Other heritage'],'Historical Figure':['Historical figure'],'Architecture':['Dravidian','Nagara','Vesara','Regional'],'Pilgrimage / Temple Circuits':['Char Dham','Jyotirlinga','Shakti Peetha','Regional circuit']};
+const normalize=v=>String(v||'').normalize('NFC').toLocaleLowerCase().replace(/[\u200c\u200d\uFEFF]/g,'').replace(/[\s\-–—'’.]/g,'');
 function saveFavourites(){localStorage.setItem('templemap-favourites',JSON.stringify(state.favourites));}
-function applyTextSize(){document.body.classList.remove('small-text','large-text','xlarge-text'); if(state.textSize==='small')document.body.classList.add('small-text'); if(state.textSize==='large')document.body.classList.add('large-text'); if(state.textSize==='xlarge')document.body.classList.add('xlarge-text');}
+function applyTextSize(){document.body.classList.remove('small-text','large-text','xlarge-text');if(state.textSize==='small')document.body.classList.add('small-text');if(state.textSize==='large')document.body.classList.add('large-text');if(state.textSize==='xlarge')document.body.classList.add('xlarge-text');}
 function navigate(route){location.hash=route;}
-function escapeHtml(value){return String(value).replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));}
-
-function searchTemples(query){
-  const q=normalize(query); if(!q)return [];
-  return temples.filter(t=>[t.name,t.ml,t.place,t.district,t.state,t.focus,t.type,t.tradition].some(v=>normalize(v).includes(q)));
-}
-function didYouMean(query){
-  const q=normalize(query); if(!q)return '';
-  const candidate=temples.map(t=>t.name).find(n=>normalize(n).startsWith(q.slice(0,Math.max(2,q.length-1))));
-  return candidate && !searchTemples(query).length ? `<p class="muted">Did you mean <button class="link-button" data-suggest="${escapeHtml(candidate)}">${escapeHtml(candidate)}</button>?</p>` : '';
-}
-function searchBar(id,value=''){
-  return `<div class="search-box"><input id="${id}" value="${escapeHtml(value)}" placeholder="Search in English or Malayalam" autocomplete="off" enterkeyhint="search"><button class="search-go" id="${id}Go" aria-label="Search" title="Search">⌕</button></div>`;
-}
+function escapeHtml(v){return String(v).replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));}
+function searchTemples(query){const q=normalize(query);if(!q)return[];return temples.filter(t=>[t.name,t.ml,t.place,t.district,t.state,t.focus,t.type,t.tradition].some(v=>normalize(v).includes(q)));}
+function didYouMean(query){const q=normalize(query);if(!q)return'';const candidate=temples.map(t=>t.name).find(n=>normalize(n).startsWith(q.slice(0,Math.max(2,q.length-1))));return candidate&&!searchTemples(query).length?`<p class="muted">Did you mean <button class="link-button" data-suggest="${escapeHtml(candidate)}">${escapeHtml(candidate)}</button>?</p>`:'';}
+function searchBar(id,value=''){return `<div class="search-box"><input id="${id}" value="${escapeHtml(value)}" placeholder="Search in English or Malayalam" autocomplete="off" enterkeyhint="search"><button class="search-go" id="${id}Go" aria-label="Search" title="Search">⌕</button></div>`;}
 function resultLink(t){return `<a class="result-link" href="#temple/${t.id}"><strong>${escapeHtml(t.name)}</strong><span class="muted">${escapeHtml(t.place)}, ${escapeHtml(t.district)}, ${escapeHtml(t.state)}</span></a>`;}
-
-function searchPage(){
-  const results=searchTemples(state.query); const count=results.length;
-  return `<div class="page-head"><a class="back" href="#home">← Back</a><h1>Search</h1></div>
-    ${searchBar('searchInput',state.query)}
-    ${state.query?`<span class="count-pill">${count.toLocaleString()} results found</span>`:'<p class="muted">Search by temple name, place, district, state, deity or sacred focus.</p>'}
-    ${didYouMean(state.query)}
-    ${count?`<div class="result-list">${results.slice(0,50).map(resultLink).join('')}</div>${count>50?'<p class="muted">Showing the first 50 results. Narrow your search to see fewer results.</p>':''}`:(state.query?'<div class="empty">No matching temples found.</div>':'')}`;
-}
-
-function templePage(id){
-  const t=temples.find(x=>x.id===id); if(!t)return '<div class="empty">Temple not found.</div>';
-  const saved=state.favourites.includes(t.id); const u=state.templeUpdates?.temples?.[t.id] || {};
-  const links=(u.links||[]).map(x=>`<a class="secondary" href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.label)}</a>`).join('');
-  const news=(u.newsLinks||[]).map(x=>`<a class="result-link" href="${escapeHtml(x.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(x.title)}</strong><span class="muted">${escapeHtml(x.source||'Original source')}</span></a>`).join('');
-  return `<div class="page-head"><a class="back" href="#${state.previousRoute||'search'}">← Back</a><h1>Temple</h1></div>
-    <div class="detail-grid"><div class="detail-image" role="img" aria-label="Temple image placeholder">⌂</div>
-    <div class="detail-panel"><h2>${escapeHtml(t.name)}</h2><p class="muted">${escapeHtml(t.ml)}</p>
-      <div class="field"><b>Place</b>${escapeHtml(t.place)}, ${escapeHtml(t.district)}, ${escapeHtml(t.state)}</div>
-      <div class="field"><b>Sacred Focus</b>${escapeHtml(t.focus)}</div><div class="field"><b>Site Category</b>${escapeHtml(t.type)}</div><div class="field"><b>Tradition</b>${escapeHtml(t.tradition)}</div>
-      <div class="actions" style="margin-top:14px"><button class="${saved?'secondary':'primary'}" id="favButton">${saved?'♥ Saved':'♡ Add to Favourites'}</button><button class="secondary" id="shareTemple">↗ Share</button></div>
-      ${links?`<section class="section"><h3>Official Temple Links</h3><div class="actions">${links}</div></section>`:''}
-      ${news?`<section class="section"><h3>Latest News & Festivals</h3><div class="result-list">${news}</div></section>`:'<section class="section"><h3>Nearby Temples</h3><p class="muted">Nearby temples will be generated automatically from the full India data index.</p></section>'}
-      <div class="notice">TempleMap India is an independent public information resource. Verify changing information with the original authority before travelling.${u.lastVerified?` Last verified: ${escapeHtml(u.lastVerified)}.`:''}</div>
-    </div></div>`;
-}
-
-function homePage(){
-  const h=state.homeData||{}; const featured=(h.featuredTempleIds||['ochira','kottakkal-vishwambhara','somnath','tirumala']).map(id=>temples.find(t=>t.id===id)).filter(Boolean);
-  const news=(h.newsLinks||[]).map(x=>`<a class="result-link" href="${escapeHtml(x.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(x.title)}</strong><span class="muted">${escapeHtml(x.source||'Original source')}</span></a>`).join('');
-  return `<section class="hero" ${h.wallpaper?`style="background-image:linear-gradient(135deg,rgba(111,75,194,.82),rgba(99,193,239,.72)),url('${escapeHtml(h.wallpaper)}')"`:''}><h1>TempleMap India</h1><p>${escapeHtml(h.description||'A lightweight directory of temples and sacred places across India.')}</p></section>
-    ${searchBar('homeSearch')}
-    <div class="actions"><a class="primary" href="#search">Search Temples</a><a class="secondary" href="#browse">Browse</a></div>
-    <section class="section"><h2>Featured Temples</h2><div class="feature-strip">${featured.map(t=>`<a class="feature" href="#temple/${t.id}"><div class="feature-thumb">⌂</div><span class="feature-name">${escapeHtml(t.name)}</span><small class="muted">${escapeHtml(t.place)}</small></a>`).join('')}</div></section>
-    <section class="section"><h2>Latest Temple News & Festivals</h2>${news?`<div class="result-list">${news}</div>`:'<div class="card"><strong>Updates will appear here</strong><small>Official and verified current links can be added through data/updates.json.</small></div>'}</section>`;
-}
-
-function browsePage(){
-  return `<div class="page-head"><a class="back" href="#home">← Back</a><h1>Browse</h1></div><p class="muted">Select a classification. The dropdown values are ready for the full India-wide data index.</p><div class="filter-list">${Object.entries(browseData).map(([name,options])=>`<div class="filter-row"><span><strong>${escapeHtml(name)}</strong><br><small class="muted">Full India index connection</small></span><select data-browse="${escapeHtml(name)}"><option value="">Select</option>${options.map(o=>`<option>${escapeHtml(o)}</option>`).join('')}</select></div>`).join('')}</div>`;
-}
-function favouritesPage(){const saved=temples.filter(t=>state.favourites.includes(t.id));return `<div class="page-head"><a class="back" href="#home">← Back</a><h1>Favourites</h1></div>${saved.length?`<div class="result-list">${saved.map(resultLink).join('')}</div>`:'<div class="empty">No favourites saved yet.<br>Open a temple and choose “Add to Favourites”.</div>'}`;}
-
-function settingsPage(){
-  return `<div class="page-head"><a class="back" href="#home">← Back</a><h1>Settings</h1></div><div class="filter-list">
-    <div class="filter-row"><span><strong>📍 Location</strong><br><small class="muted" id="locationState">Permission is controlled by your device/browser.</small></span><button class="secondary" id="locationButton">Enable</button></div>
-    <div class="filter-row"><span><strong>Text Size</strong><br><small class="muted">Choose a size that reflows the layout</small></span><select id="textSize"><option value="small" ${state.textSize==='small'?'selected':''}>Small</option><option value="normal" ${state.textSize==='normal'?'selected':''}>Normal</option><option value="large" ${state.textSize==='large'?'selected':''}>Large</option><option value="xlarge" ${state.textSize==='xlarge'?'selected':''}>Extra Large</option></select></div>
-    <div class="card"><strong>Add to Home Screen</strong><small>Use your browser's Add to Home Screen / Install option. TempleMap India includes PWA manifest support.</small><div class="install-row" style="margin-top:10px"><button class="primary" id="installButton">Install / Add</button></div></div>
-    <div class="card"><strong>Share TempleMap India</strong><small>Share this public resource with your preferred service.</small><div class="share-list" style="margin-top:10px"><button class="secondary" id="shareApp">↗ Share</button><a class="secondary" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}">Facebook</a><a class="secondary" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(location.href)}&text=${encodeURIComponent('TempleMap India')}">X</a></div></div>
-    <div class="card"><strong>About</strong><small>TempleMap India is an independent public information directory, not a government website or government service.</small></div>
-    <div class="card"><strong>Privacy</strong><small>Favourites and text-size preference are stored locally in this browser.</small></div>
-  </div>`;
-}
-
-async function loadData(){
-  try{state.homeData=await fetch('data/home-data.json').then(r=>r.ok?r.json():null);}catch(e){}
-  try{state.updates=await fetch('data/updates.json').then(r=>r.ok?r.json():null);}catch(e){}
-  try{state.templeUpdates=await fetch('data/temple-updates.json').then(r=>r.ok?r.json():null);}catch(e){}
-  render();
-}
-
-function render(){
-  const app=document.getElementById('app'); const [base,id]=state.route.split('/');
-  if(base==='temple')app.innerHTML=templePage(id); else if(base==='search')app.innerHTML=searchPage(); else if(base==='browse')app.innerHTML=browsePage(); else if(base==='favourites')app.innerHTML=favouritesPage(); else if(base==='settings')app.innerHTML=settingsPage(); else app.innerHTML=homePage();
-  updateNav(base); bindEvents(); applyTextSize(); app.scrollTop=0;
-}
+function searchPage(){const results=searchTemples(state.query),count=results.length;return `<div class="page-head"><a class="back" href="#home">← Back</a><h1>Search</h1></div>${searchBar('searchInput',state.query)}${state.query?`<span class="count-pill">${count.toLocaleString()} results found</span>`:'<p class="muted">Search by temple name, place, district, state, deity or sacred focus.</p>'}${didYouMean(state.query)}${count?`<div class="result-list search-page-list">${results.slice(0,50).map(resultLink).join('')}</div>${count>50?'<p class="muted">Showing the first 50 results. Narrow your search to see fewer results.</p>':''}`:(state.query?'<div class="empty">No matching temples found.</div>':'')}`;}
+function templePage(id){const t=temples.find(x=>x.id===id);if(!t)return'<div class="empty">Temple not found.</div>';const saved=state.favourites.includes(t.id),u=state.templeUpdates?.temples?.[t.id]||{};const links=(u.links||[]).map(x=>`<a class="secondary" href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.label)}</a>`).join('');const news=(u.newsLinks||[]).map(x=>`<a class="result-link" href="${escapeHtml(x.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(x.title)}</strong><span class="muted">${escapeHtml(x.source||'Original source')}</span></a>`).join('');return `<div class="page-head"><a class="back" href="#${state.previousRoute||'search'}">← Back</a><h1>Temple</h1></div><div class="detail-grid"><div class="detail-image" role="img" aria-label="Temple image placeholder">⌂</div><div class="detail-panel detail-scroll"><h2>${escapeHtml(t.name)}</h2><p class="muted">${escapeHtml(t.ml)}</p><div class="field"><b>Place</b>${escapeHtml(t.place)}, ${escapeHtml(t.district)}, ${escapeHtml(t.state)}</div><div class="field"><b>Sacred Focus</b>${escapeHtml(t.focus)}</div><div class="field"><b>Site Category</b>${escapeHtml(t.type)}</div><div class="field"><b>Tradition</b>${escapeHtml(t.tradition)}</div><div class="actions" style="margin-top:14px"><button class="${saved?'secondary':'primary'}" id="favButton">${saved?'♥ Saved':'♡ Add to Favourites'}</button><button class="secondary" id="shareTemple">↗ Share</button></div>${links?`<section class="section"><h3>Official Temple Links</h3><div class="actions">${links}</div></section>`:''}${news?`<section class="section"><h3>Latest News & Festivals</h3><div class="result-list">${news}</div></section>`:'<section class="section"><h3>Nearby Temples</h3><p class="muted">Nearby temples will be generated automatically from the full India data index.</p></section>'}<div class="notice">TempleMap India is an independent public information resource. Verify changing information with the original authority before travelling.${u.lastVerified?` Last verified: ${escapeHtml(u.lastVerified)}.`:''}</div></div></div>`;}
+function homePage(){const h=state.homeData||{},featured=(h.featuredTempleIds||['ochira','kottakkal-vishwambhara','somnath','tirumala']).map(id=>temples.find(t=>t.id===id)).filter(Boolean),news=(h.newsLinks||[]).map(x=>`<a class="result-link" href="${escapeHtml(x.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(x.title)}</strong><span class="muted">${escapeHtml(x.source||'Original source')}</span></a>`).join('');return `<section class="hero"><h1>TempleMap India</h1><p>${escapeHtml(h.description||'A lightweight directory of temples and sacred places across India.')}</p></section>${searchBar('homeSearch')}<div class="actions"><a class="primary" href="#search">Search Temples</a><a class="secondary" href="#browse">Browse</a></div><section class="section"><h2>Featured Temples</h2><div class="feature-strip">${featured.map(t=>`<a class="feature" href="#temple/${t.id}"><div class="feature-thumb">⌂</div><span class="feature-name">${escapeHtml(t.name)}</span><small class="muted">${escapeHtml(t.place)}</small></a>`).join('')}</div></section><section class="section"><h2>Latest Temple News & Festivals</h2>${news?`<div class="result-list">${news}</div>`:'<div class="card"><strong>Updates will appear here</strong><small>Official and verified current links can be added through data/updates.json.</small></div>'}</section>`;}
+function browsePage(){return `<div class="page-head"><a class="back" href="#home">← Back</a><h1>Browse</h1></div><p class="muted">Select a classification. The dropdown values are ready for the full India-wide data index.</p><div class="filter-list">${Object.entries(browseData).map(([name,options])=>`<div class="filter-row"><span><strong>${escapeHtml(name)}</strong><br><small class="muted">Full India index connection</small></span><select data-browse="${escapeHtml(name)}"><option value="">Select</option>${options.map(o=>`<option>${escapeHtml(o)}</option>`).join('')}</select></div>`).join('')}</div>`;}
+function favouritesPage(){const saved=temples.filter(t=>state.favourites.includes(t.id));return `<div class="page-head"><a class="back" href="#home">← Back</a><h1>Favourites</h1></div>${saved.length?`<div class="result-list favourite-list">${saved.map(resultLink).join('')}</div>`:'<div class="empty">No favourites saved yet.<br>Open a temple and choose “Add to Favourites”.</div>'}`;}
+function settingsPage(){return `<div class="page-head"><a class="back" href="#home">← Back</a><h1>Settings</h1></div><div class="filter-list"><div class="filter-row"><span><strong>📍 Location</strong><br><small class="muted" id="locationState">Permission is controlled by your device/browser.</small></span><button class="secondary" id="locationButton">Enable</button></div><div class="filter-row"><span><strong>Text Size</strong><br><small class="muted">Choose a size that reflows the layout</small></span><select id="textSize"><option value="small" ${state.textSize==='small'?'selected':''}>Small</option><option value="normal" ${state.textSize==='normal'?'selected':''}>Normal</option><option value="large" ${state.textSize==='large'?'selected':''}>Large</option><option value="xlarge" ${state.textSize==='xlarge'?'selected':''}>Extra Large</option></select></div><div class="card"><strong>Add to Home Screen</strong><small>Use your browser's Add to Home Screen / Install option. TempleMap India includes PWA manifest support.</small><div class="install-row" style="margin-top:10px"><button class="primary" id="installButton">Install / Add</button></div></div><div class="card"><strong>Share TempleMap India</strong><small>Share this public resource with your preferred service.</small><div class="share-list" style="margin-top:10px"><button class="secondary" id="shareApp">↗ Share</button><a class="secondary" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}">Facebook</a><a class="secondary" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(location.href)}&text=${encodeURIComponent('TempleMap India')}">X</a></div></div><div class="card"><strong>About</strong><small>TempleMap India is an independent public information directory, not a government website or government service.</small></div><div class="card"><strong>Privacy</strong><small>Favourites and text-size preference are stored locally in this browser.</small></div></div>`;}
+async function loadData(){try{state.homeData=await fetch('data/home-data.json').then(r=>r.ok?r.json():null);}catch(e){}try{state.updates=await fetch('data/updates.json').then(r=>r.ok?r.json():null);}catch(e){}try{state.templeUpdates=await fetch('data/temple-updates.json').then(r=>r.ok?r.json():null);}catch(e){}render();}
+function render(){const app=document.getElementById('app'),[base,id]=state.route.split('/');if(base==='temple')app.innerHTML=templePage(id);else if(base==='search')app.innerHTML=searchPage();else if(base==='browse')app.innerHTML=browsePage();else if(base==='favourites')app.innerHTML=favouritesPage();else if(base==='settings')app.innerHTML=settingsPage();else app.innerHTML=homePage();app.classList.toggle('tab-fixed',!['search','favourites'].includes(base));updateNav(base);bindEvents();applyTextSize();app.scrollTop=0;}
 function updateNav(base){document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('active',a.dataset.nav===base||(base==='temple'&&state.previousRoute.split('/')[0]===a.dataset.nav)));}
-function runSearch(inputId){const el=document.getElementById(inputId);if(!el)return;state.query=el.value.trim();navigate('search');}
-function bindEvents(){
-  const input=document.getElementById('searchInput'); if(input){input.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch('searchInput');});document.getElementById('searchInputGo')?.addEventListener('click',()=>runSearch('searchInput'));}
-  const home=document.getElementById('homeSearch');if(home){home.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch('homeSearch');});document.getElementById('homeSearchGo')?.addEventListener('click',()=>runSearch('homeSearch'));}
-  document.querySelectorAll('[data-suggest]').forEach(b=>b.addEventListener('click',()=>{state.query=b.dataset.suggest;render();}));
-  document.querySelectorAll('[data-browse]').forEach(s=>s.addEventListener('change',()=>{if(s.value)alert(`${s.dataset.browse}: ${s.value} will be connected to the full India data index next.`);}));
-  document.getElementById('favButton')?.addEventListener('click',()=>{const id=state.route.split('/')[1];state.favourites=state.favourites.includes(id)?state.favourites.filter(x=>x!==id):[...state.favourites,id];saveFavourites();render();});
-  document.getElementById('shareApp')?.addEventListener('click',shareApp); document.getElementById('shareTemple')?.addEventListener('click',shareTemple);
-  document.getElementById('installButton')?.addEventListener('click',installApp);
-  document.getElementById('settingsButton')?.addEventListener('click',()=>navigate('settings'));
-  document.getElementById('textSize')?.addEventListener('change',e=>{state.textSize=e.target.value;localStorage.setItem('templemap-text-size',state.textSize);applyTextSize();});
-  document.getElementById('locationButton')?.addEventListener('click',enableLocation);
-}
-async function enableLocation(){if(!navigator.geolocation)return alert('Location is not supported by this browser.');navigator.geolocation.getCurrentPosition(()=>{const s=document.getElementById('locationState');if(s)s.textContent='Location permission is enabled.';},()=>{const s=document.getElementById('locationState');if(s)s.textContent='Location permission was not granted.';});}
-async function shareApp(){const data={title:'TempleMap India',text:'TempleMap India — a lightweight directory of temples and sacred places across India.',url:location.href};if(navigator.share){try{await navigator.share(data);}catch(e){}}else{await navigator.clipboard?.writeText(location.href);alert('Link copied. You can now share it on social media.');}}
-async function shareTemple(){const t=temples.find(x=>x.id===state.route.split('/')[1]);if(!t)return;const data={title:t.name,text:`${t.name} — TempleMap India`,url:location.href};if(navigator.share){try{await navigator.share(data);}catch(e){}}else{await navigator.clipboard?.writeText(location.href);alert('Temple link copied.');}}
-let deferredInstallPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;});
-async function installApp(){if(deferredInstallPrompt){deferredInstallPrompt.prompt();deferredInstallPrompt=null;return;}alert('If Install is not offered here, open the browser menu and choose “Add to Home Screen” or “Install”.');}
+function runSearch(id){const el=document.getElementById(id);if(!el)return;state.query=el.value.trim();navigate('search');}
+function bindEvents(){const input=document.getElementById('searchInput');if(input){input.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch('searchInput');});document.getElementById('searchInputGo')?.addEventListener('click',()=>runSearch('searchInput'));}const home=document.getElementById('homeSearch');if(home){home.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch('homeSearch');});document.getElementById('homeSearchGo')?.addEventListener('click',()=>runSearch('homeSearch'));}document.querySelectorAll('[data-suggest]').forEach(b=>b.addEventListener('click',()=>{state.query=b.dataset.suggest;render();}));document.querySelectorAll('[data-browse]').forEach(s=>s.addEventListener('change',()=>{if(s.value)alert(`${s.dataset.browse}: ${s.value} will be connected to the full India data index next.`);}));document.getElementById('favButton')?.addEventListener('click',()=>{const id=state.route.split('/')[1];state.favourites=state.favourites.includes(id)?state.favourites.filter(x=>x!==id):[...state.favourites,id];saveFavourites();render();});document.getElementById('shareApp')?.addEventListener('click',shareApp);document.getElementById('shareTemple')?.addEventListener('click',shareTemple);document.getElementById('installButton')?.addEventListener('click',installApp);document.getElementById('settingsButton')?.addEventListener('click',()=>navigate('settings'));document.getElementById('textSize')?.addEventListener('change',e=>{state.textSize=e.target.value;localStorage.setItem('templemap-text-size',state.textSize);applyTextSize();});document.getElementById('locationButton')?.addEventListener('click',enableLocation);}
+function enableLocation(){if(!navigator.geolocation)return alert('Location is not supported by this browser.');navigator.geolocation.getCurrentPosition(()=>{const s=document.getElementById('locationState');if(s)s.textContent='Location permission is enabled.';},()=>{const s=document.getElementById('locationState');if(s)s.textContent='Location permission was not granted.';});}
+async function shareApp(){const d={title:'TempleMap India',text:'TempleMap India — a lightweight directory of temples and sacred places across India.',url:location.href};if(navigator.share){try{await navigator.share(d)}catch(e){}}else{await navigator.clipboard?.writeText(location.href);alert('Link copied. You can now share it on social media.');}}
+async function shareTemple(){const t=temples.find(x=>x.id===state.route.split('/')[1]);if(!t)return;const d={title:t.name,text:`${t.name} — TempleMap India`,url:location.href};if(navigator.share){try{await navigator.share(d)}catch(e){}}else{await navigator.clipboard?.writeText(location.href);alert('Temple link copied.');}}
+let deferredInstallPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;});async function installApp(){if(deferredInstallPrompt){deferredInstallPrompt.prompt();deferredInstallPrompt=null;return;}alert('If Install is not offered here, open the browser menu and choose “Add to Home Screen” or “Install”.');}
 window.addEventListener('hashchange',()=>{const next=location.hash.replace('#','')||'home',nextBase=next.split('/')[0],currentBase=state.route.split('/')[0];if(nextBase==='temple'&&currentBase!=='temple')state.previousRoute=state.route;state.route=next;render();});
 applyTextSize();render();loadData();
