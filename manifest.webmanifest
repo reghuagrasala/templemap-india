@@ -1,0 +1,13 @@
+{
+  "name": "TempleMap India",
+  "short_name": "TempleMap",
+  "description": "A lightweight directory of temples and sacred places across India.",
+  "start_url": "./#home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f8ff",
+  "theme_color": "#6f8fe8",
+  "icons": [
+    {"src":"favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
