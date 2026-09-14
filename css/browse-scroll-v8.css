@@ -1,0 +1,1 @@
+.content.tab-fixed:has(.browse-page){overflow-y:auto!important;overflow-x:hidden;overscroll-behavior:contain;scroll-padding-bottom:18px}.browse-page-wrap{padding-bottom:18px}@media(max-width:699px){.content.tab-fixed:has(.browse-page){overflow-y:auto!important}.browse-page-wrap{padding-bottom:24px}}
