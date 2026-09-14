@@ -1,0 +1,18 @@
+/* TempleMap India V9 enhancement layer — preserves the existing frame/layout. */
+:root{--focus:#148fe0}
+button,a,select,input{outline-offset:2px}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.search-box input{font-family:system-ui,-apple-system,"Segoe UI",Arial,"Noto Sans Malayalam",sans-serif}
+.ml-text{font-family:system-ui,-apple-system,"Segoe UI",Arial,"Noto Sans Malayalam",sans-serif}
+.browse-toolbar{position:relative}
+.browse-summary{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+.filter-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--muted);font-size:9px;line-height:1.1}
+.filter-chip b{color:var(--text);font-weight:700}
+.clear-filters{min-height:28px;padding:4px 8px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--text);font-size:10px;cursor:pointer}
+.clear-filters:hover{border-color:var(--accent2)}
+.result-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:2px 0 6px}
+.result-meta .muted{margin:0}
+.empty{padding:14px;text-align:center;color:var(--muted);background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:12px;font-size:11px}
+.loading-note{padding:10px;color:var(--muted);font-size:11px}
+@media(max-width:699px){.browse-summary{margin-bottom:5px}.filter-chip{font-size:8px}.clear-filters{font-size:9px}.result-meta{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
