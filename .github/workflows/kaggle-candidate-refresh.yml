@@ -1,0 +1,62 @@
+name: Kaggle candidate data refresh
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 2 1 * *'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Kaggle client
+        run: python -m pip install --upgrade kaggle
+
+      - name: Download candidate dataset
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+          KAGGLE_DATASET: ${{ vars.KAGGLE_DATASET }}
+        run: |
+          set -e
+          test -n "$KAGGLE_API_TOKEN" || { echo "KAGGLE_API_TOKEN secret is missing"; exit 1; }
+          test -n "$KAGGLE_DATASET" || { echo "KAGGLE_DATASET repository variable is missing"; exit 1; }
+          mkdir -p .tmp/kaggle
+          kaggle datasets download -d "$KAGGLE_DATASET" -p .tmp/kaggle --unzip
+          find .tmp/kaggle -maxdepth 2 -type f -print
+
+      - name: Validate candidate data without publishing it
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv
+
+          files = list(Path(".tmp/kaggle").rglob("*.csv"))
+          if not files:
+              raise SystemExit("No CSV dataset found in Kaggle download.")
+
+          for path in files:
+              with path.open("r", encoding="utf-8-sig", newline="") as f:
+                  reader = csv.reader(f)
+                  header = next(reader, [])
+              print(f"{path}: {len(header)} columns")
+              print("Columns:", header)
+
+          print("Candidate data downloaded successfully.")
+          print("Nothing is copied into the public production dataset by this workflow.")
+          PY
+
+      - name: Upload candidate dataset for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaggle-candidate-data
+          path: .tmp/kaggle
+          retention-days: 14
